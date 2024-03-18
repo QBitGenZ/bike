@@ -11,8 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+import os
 
 from django.conf import settings
+from django.contrib import staticfiles
 from rest_framework import authentication
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 
     'user_management.apps.UserManagementConfig',
     'bicycle.apps.BicycleConfig',
@@ -48,6 +51,7 @@ INSTALLED_APPS = [
     'resource.apps.ResourceConfig',
     'customer_finance.apps.CustomerFinanceConfig',
     'usage.apps.UsageConfig',
+    'transaction_location.apps.TransactionLocationConfig',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +62,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'bike_server.urls'
@@ -171,3 +177,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
+MEDIA_URL = '/uploads/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')

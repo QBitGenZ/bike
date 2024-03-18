@@ -9,7 +9,7 @@ class BicycleTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BicycleType
-        fields = ['id', 'name', 'description', 'image', 'bicycle_type_feedbacks']
+        fields = ['id', 'name', 'description', 'price', 'image', 'bicycle_type_feedbacks']
 
         extra_kwargs = {
             'id': {'read_only': True}
@@ -22,11 +22,9 @@ class BicycleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bicycle
-        fields = ['id', 'type', 'price', 'bicycle_images', 'bicycle_feedbacks']
+        fields = ['id', 'type', 'bicycle_images', 'bicycle_feedbacks']
 
         extra_kwargs = {
             'id': {'read_only': True},
             'bicycle_images': {'read_only': True}
         }
-
-        required_fields = ['type', 'price']

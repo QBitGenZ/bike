@@ -9,6 +9,7 @@ class BicycleType(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to='uploads/%Y/%m/')
+    price = models.FloatField()
 
     def __str__(self):
         return self.name
@@ -17,7 +18,6 @@ class BicycleType(models.Model):
 class Bicycle(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, auto_created=True)
     type = models.ForeignKey(BicycleType, on_delete=models.CASCADE)
-    price = models.FloatField()
 
     def __str__(self):
         return self.id
