@@ -35,7 +35,7 @@ class AdminUserView(APIView):
             except User.DoesNotExist:
                 return Response({'error': 'Không có giá trị thỏa mãn'}, status=status.HTTP_404_NOT_FOUND)
 
-            serializer = AdminUserSerializer(user, data=request.data)
+            serializer = AdminUserSerializer(user, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'data': serializer.data}, status=status.HTTP_200_OK)
@@ -76,12 +76,26 @@ class UserView(APIView):
             serializer = UserSerializer(users, many=True)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     def put(self, request, *args, **kwargs):
-        serializers = UserSerializer(request.user, data=request.data)
-        if serializers.is_valid():
-            serializers.save()
-            return Response({'data': serializers.data}, status=status.HTTP_200_OK)
+        if request.user.is_superuser:
+            username = request.query_params.get('username')
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return Response({'error': 'Không có giá trị thỏa mãn'}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error': serializers.errors}, status=status.HTTP_400_BAD_REQUEST)
+            serializers = UserSerializer(request.user, data=request.data, partial=True)
+            if serializers.is_valid():
+                serializers.save()
+                return Response({'data': serializers.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': serializers.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
         if request.user.is_superuser:

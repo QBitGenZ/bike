@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bicycle.models import BicycleType, Bicycle
-from bicycle.serializers import BicycleTypeSerializer, BicycleSerializer
+from bicycle.serializers import BicycleTypeSerializer, BicycleSerializer, GetBicycleSerializer
 
 
 # Create your views here.
@@ -51,6 +51,7 @@ class BicycleTypeView(APIView):
                 {'error': serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
 
 class BicycleTypePkView(APIView):
     permission_classes = [IsAuthenticated]
@@ -109,6 +110,8 @@ class BicycleTypePkView(APIView):
 
         type.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class BicycleView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -124,13 +127,12 @@ class BicycleView(APIView):
         except PageNotAnInteger:
             page_bicycle = bicycle_limit.page(bicycle_limit.num_pages)
 
-        serializer = BicycleSerializer(page_bicycle, many=True)
+        serializer = GetBicycleSerializer(page_bicycle, many=True)
 
         return Response(
             {'data': serializer.data},
             status=status.HTTP_200_OK
         )
-
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_superuser:
@@ -153,13 +155,13 @@ class BicycleView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
 class BicyclePkView(APIView):
     permission_classes = [IsAuthenticated]
 
-
     def get(self, request, pk, *args, **kwargs):
         bicycle = Bicycle.objects.get(pk=pk)
-        serializer = BicycleSerializer(bicycle)
+        serializer = GetBicycleSerializer(bicycle)
         return Response(
             {'data': serializer.data},
             status=status.HTTP_200_OK

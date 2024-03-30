@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator, PageNotAnInteger
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -5,10 +6,28 @@ from rest_framework.views import APIView
 
 from feedback.serializers import *
 
-
 # Create your views here.
 class BicycleFeedbackView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        page = request.query_params.get('page', 1)
+        limit = request.query_params.get('limit', 10)
+
+        feedback = Feedback.objects.exclude(bicycle=None).order_by('created_at')
+        feedback_limit = Paginator(feedback, limit)
+
+        try:
+            page_events = feedback_limit.page(page)
+        except PageNotAnInteger:
+            page_events = feedback_limit.page(feedback_limit.num_pages)
+
+        serializer = BicycleFeedbackSerializer(page_events, many=True)
+
+        return Response(
+            {'data': serializer.data},
+            status=status.HTTP_200_OK
+        )
 
     def post(self, request, *args, **kwargs):
         data = request.data.copy()
@@ -65,6 +84,24 @@ class BicycleFeedbackView(APIView):
 
 class BicycleTypeFeedbackView(APIView):
     permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        page = request.query_params.get('page', 1)
+        limit = request.query_params.get('limit', 10)
+
+        feedback = Feedback.objects.exclude(bicycle_type=None).order_by('created_at')
+        feedback_limit = Paginator(feedback, limit)
+
+        try:
+            page_feedbacks = feedback_limit.page(page)
+        except PageNotAnInteger:
+            page_feedbacks = feedback_limit.page(feedback_limit.num_pages)
+
+        serializer = BicycleTypeFeedbackSerializer(page_feedbacks, many=True)
+
+        return Response(
+            {'data': serializer.data},
+            status=status.HTTP_200_OK
+        )
 
     def post(self, request, *args, **kwargs):
         data = request.data.copy()
@@ -122,6 +159,25 @@ class BicycleTypeFeedbackView(APIView):
 
 class EventFeedbackView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        page = request.query_params.get('page', 1)
+        limit = request.query_params.get('limit', 10)
+
+        feedback = Feedback.objects.exclude(event=None).order_by('created_at')
+        feedback_limit = Paginator(feedback, limit)
+
+        try:
+            page_feedbacks = feedback_limit.page(page)
+        except PageNotAnInteger:
+            page_feedbacks = feedback_limit.page(feedback_limit.num_pages)
+
+        serializer = EventFeedbackSerializer(page_feedbacks, many=True)
+
+        return Response(
+            {'data': serializer.data},
+            status=status.HTTP_200_OK
+        )
 
     def post(self, request, *args, **kwargs):
         data = request.data.copy()

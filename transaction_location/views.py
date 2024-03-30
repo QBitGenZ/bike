@@ -51,7 +51,7 @@ class TransactionPkView(APIView):
         serializer = TransactionSerializer(instance=transaction)
         return Response({'data': serializer.data}, status=status.HTTP_200_OK)
 
-    def post(self, request, pk, *args, **kwargs):
+    def put(self, request, pk, *args, **kwargs):
         try:
             transaction = Transaction.objects.get(pk=pk)
         except Transaction.DoesNotExist:

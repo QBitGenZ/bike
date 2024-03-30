@@ -26,6 +26,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=10, null=False, blank=False)
     avatar = models.ImageField(upload_to='uploads/%Y/%m/%d/', null=True, blank=True)
     address = models.CharField(max_length=500)
+    is_banned = models.BooleanField(default=False)
 
     objects = UserManager()
 

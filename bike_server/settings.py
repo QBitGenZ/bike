@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'customer_finance.apps.CustomerFinanceConfig',
     'usage.apps.UsageConfig',
     'transaction_location.apps.TransactionLocationConfig',
+    'system_statistic.apps.SystemStatisticConfig',
 ]
 
 MIDDLEWARE = [
