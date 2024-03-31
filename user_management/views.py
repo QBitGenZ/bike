@@ -145,3 +145,12 @@ class RegisterView(APIView):
             serializer.save()
             return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+class InfoView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request,  *args, **kwargs):
+        serializer = UserSerializer(instance=request.user)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        
+

@@ -46,6 +46,28 @@ class BicycleFeedbackView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
+
+class BicycleFeedbackPkView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            feedback = Feedback.objects.get(pk=pk)
+        except Feedback.DoesNotExist:
+            return Response(
+                {'error': 'Không có giá trị thỏa mãn'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+
+        serializer = BicycleFeedbackSerializer(instance=feedback, many=False)
+
+        return Response(
+            {'data': serializer.data},
+            status=status.HTTP_200_OK
+        )
+    
     def put(self, request, pk, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.username
@@ -81,6 +103,7 @@ class BicycleFeedbackView(APIView):
             )
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
 
 class BicycleTypeFeedbackView(APIView):
     permission_classes = [IsAuthenticated]
@@ -120,6 +143,26 @@ class BicycleTypeFeedbackView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    
+    
+class BicycleTypeFeedbackPkView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            feedback = Feedback.objects.get(pk=pk)
+        except Feedback.DoesNotExist:
+            return Response(
+                {'error': 'Không có giá trị thỏa mãn'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        serializer = BicycleTypeFeedbackSerializer(instance=feedback)
+        
+        return Response(
+            {'data': serializer.data},
+            status=status.HTTP_200_OK
+        )
+    
     def put(self, request, pk, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.username
@@ -154,7 +197,7 @@ class BicycleTypeFeedbackView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)    
 
 
 class EventFeedbackView(APIView):
@@ -196,6 +239,26 @@ class EventFeedbackView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
+class EventFeedbackPkView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            feedback = Feedback.objects.get(pk=pk)
+        except Feedback.DoesNotExist:
+            return Response(
+                {'error': 'Không có giá trị thỏa mãn'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        serializer = EventFeedbackSerializer(instance=feedback)
+        
+        return Response(
+            {'data': serializer.data},
+            status=status.HTTP_200_OK
+        )
+    
     def put(self, request, pk, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.username
@@ -231,4 +294,3 @@ class EventFeedbackView(APIView):
             )
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
