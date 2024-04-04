@@ -8,9 +8,17 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 """
 
 import os
-
+from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
+from django_channels_jwt_auth_middleware.auth import JWTAuthMiddlewareStack
+
+from messenger.routing import websocket_urlpatterns
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bike_server.settings')
 
-application = get_asgi_application()
+application = ProtocolTypeRouter({
+    'http': get_asgi_application(),
+    'websocket': JWTAuthMiddlewareStack(
+        URLRouter(websocket_urlpatterns),
+    )
+})

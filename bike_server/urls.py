@@ -30,6 +30,8 @@ urlpatterns = [
     path(version + '/using-history/', include('usage.urls')),
     path(version + '/transactions/', include('transaction_location.urls')),
     path(version + '/statistics/', include('system_statistic.urls')),
+    path(version + '/reports/', include('report.urls')),
+    path(version + '/messengers/', include('messenger.urls')),
 ]
 
 if settings.DEBUG:

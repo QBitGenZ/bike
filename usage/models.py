@@ -12,8 +12,8 @@ class UsingHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, to_field='username')
     bicycle = models.ForeignKey(Bicycle, on_delete=models.CASCADE)
     start_at = models.DateTimeField()
-    end_at = models.DateTimeField()
-    distance = models.FloatField()
+    end_at = models.DateTimeField(null=True, blank=True)
+    distance = models.FloatField(null=True, blank=True)
 
     class Meta:
         constraints = [

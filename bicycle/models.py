@@ -24,3 +24,4 @@ class Bicycle(models.Model):
 
     def __str__(self):
         return self.id
+    
