@@ -3,14 +3,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Count
-from django.db.models.functions import TruncMonth, ExtractWeekDay
+from django.db.models import Count, ExpressionWrapper, F, DurationField
+from django.db.models.functions import TruncMonth, ExtractWeekDay, Coalesce
 from usage.models import UsingHistory
 from user_management.models import User
 from event.models import Event
-from bicycle.models import Bicycle
+from bicycle.models import Bicycle, BicycleType
 from datetime import datetime, timedelta
 from django.db.models import Count, Sum
+
 
 
 class UsageStatisticsAPIView(APIView):
@@ -203,3 +204,23 @@ class RevenueComparisonAPIView(APIView):
             else:
                 start_date = start_date.replace(day=1, month=start_date.month + 1)
         return months
+    
+class TopUsedBicycleTypesAPIView(APIView):
+    def get(self, request):
+        # Thực hiện nhóm dữ liệu theo loại xe và tính tổng số lượt sử dụng và tổng thời gian sử dụng
+        bicycle_usage_stats = UsingHistory.objects.values('bicycle__type').annotate(
+            total_usage=Count('id'),
+            total_time_used=Coalesce(Sum(F('end_at') - F('start_at')), timedelta())
+        ).order_by('-total_usage')[:10]
+
+        top_bicycle_types = []
+        for stat in bicycle_usage_stats:
+            bicycle_type = BicycleType.objects.get(pk=stat['bicycle__type'])
+            total_time_used = stat['total_time_used'].total_seconds() / 3600
+            top_bicycle_types.append({
+                'type_name': bicycle_type.name,
+                'total_usage': stat['total_usage'],
+                'total_time_used': total_time_used
+            })
+
+        return Response({'data': top_bicycle_types}, status=status.HTTP_200_OK)
