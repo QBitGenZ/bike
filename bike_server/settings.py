@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'system_statistic.apps.SystemStatisticConfig',
     'report.apps.ReportConfig',
     'messenger.apps.MessengerConfig',
+    'notification.apps.NotificationConfig',
 ]
 
 MIDDLEWARE = [

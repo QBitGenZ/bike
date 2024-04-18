@@ -13,23 +13,25 @@ class BicycleTypeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        page = request.query_params.get('page', 1)
         limit = request.query_params.get('limit', 10)
+        page = request.query_params.get('page', 1)
+        limit = int(limit)
+        page = int(page)
 
-        types = BicycleType.objects.all().order_by('name')
-        types_limit = Paginator(types, limit)
+        objects = BicycleType.objects.all().order_by('name')
+        total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
+        current_page_objects = objects[(page - 1) * limit:page * limit]
 
-        try:
-            page_types = types_limit.page(page)
-        except PageNotAnInteger:
-            page_types = types_limit.page(types_limit.num_pages)
-
-        serializer = BicycleTypeSerializer(page_types, many=True)
-
-        return Response(
-            {'data': serializer.data},
-            status=status.HTTP_200_OK
-        )
+        serializer = BicycleTypeSerializer(current_page_objects, many=True)
+        return Response({
+            'data': serializer.data,
+            'meta': {
+                'total_pages': total_pages,
+                'current_page': page,
+                'limit': limit,
+                'total': objects.count()
+            }
+        }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_superuser:
@@ -116,23 +118,25 @@ class BicycleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        page = request.query_params.get('page', 1)
         limit = request.query_params.get('limit', 10)
+        page = request.query_params.get('page', 1)
+        limit = int(limit)
+        page = int(page)
 
-        bicycles = Bicycle.objects.all().order_by('id')
-        bicycle_limit = Paginator(bicycles, limit)
+        objects = Bicycle.objects.all().order_by('id')
+        total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
+        current_page_objects = objects[(page - 1) * limit:page * limit]
 
-        try:
-            page_bicycle = bicycle_limit.page(page)
-        except PageNotAnInteger:
-            page_bicycle = bicycle_limit.page(bicycle_limit.num_pages)
-
-        serializer = GetBicycleSerializer(page_bicycle, many=True)
-
-        return Response(
-            {'data': serializer.data},
-            status=status.HTTP_200_OK
-        )
+        serializer = GetBicycleSerializer(current_page_objects, many=True)
+        return Response({
+            'data': serializer.data,
+            'meta': {
+                'total_pages': total_pages,
+                'current_page': page,
+                'limit': limit,
+                'total': objects.count()
+            }
+        }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_superuser:

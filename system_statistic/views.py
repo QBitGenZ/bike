@@ -4,7 +4,7 @@ from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, ExtractWeekDay
 from usage.models import UsingHistory
 from user_management.models import User
 from event.models import Event
@@ -116,3 +116,90 @@ class CountView(APIView):
                  {'user': user_count, 'event': event_count, 'bicycle': bicycle_count, 'using': using_hitory},
              }
             , status=200)
+
+class WeeklyUsageAPIView(APIView):
+    def get(self, request):
+        # Thực hiện thống kê số lượt sử dụng cho từng ngày trong tuần
+        usage_history = UsingHistory.objects.annotate(
+            week_day=ExtractWeekDay('start_at')
+        ).values('week_day').annotate(count=Count('id')).order_by('week_day')
+
+        # Tạo một dict để lưu trữ số lượt sử dụng theo ngày trong tuần
+        usage_dict = {item['week_day']: item['count'] for item in usage_history}
+
+        # Danh sách các ngày trong tuần từ thứ 2 đến chủ nhật
+        days_of_week = ['Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy', 'Chủ nhật']
+
+        # Tạo dữ liệu response với tên của ngày trong tuần thay vì số
+        data = [{'day_of_week': days_of_week[day - 1], 'count': usage_dict.get(day, 0)} for day in range(1, 8)]
+
+        return Response({'data': data}, status=status.HTTP_200_OK)
+    
+class RevenueComparisonAPIView(APIView):
+    def get(self, request):
+        # Lấy ngày hiện tại
+        current_date = datetime.now()
+
+        # Lấy tháng và năm của tháng đầu tiên của năm nay và năm trước
+        current_year = current_date.year
+        last_year = current_year - 1
+
+        # Tính toán khoảng thời gian từ tháng đầu tiên của năm nay đến thời điểm hiện tại
+        current_year_start = datetime(current_year, 1, 1)
+        current_year_end = timezone.datetime(current_year, 12, 31)
+        last_year_start = datetime(last_year, 1, 1)
+        last_year_end = current_year_start - timedelta(days=1)  # Kết thúc tháng trước
+
+        # Thực hiện thống kê doanh thu cho năm nay
+        current_year_revenue = self.get_revenue_in_period(current_year_start, current_year_end)
+
+        # Thực hiện thống kê doanh thu cho năm trước
+        last_year_revenue = self.get_revenue_in_period(last_year_start, last_year_end)
+
+        # Tạo dữ liệu response
+        data = {
+            'current_year': current_year_revenue,
+            'last_year': last_year_revenue
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    def get_revenue_in_period(self, start_date, end_date):
+        # Lấy danh sách các tháng từ start_date đến end_date
+        months = self.get_months(start_date, end_date)
+
+        # Lấy ngày hiện tại
+        current_date = datetime.now()
+
+        # Lấy tháng và năm của tháng hiện tại
+        current_year = current_date.year
+        current_month = current_date.month
+
+        # Nếu end_date vượt qua tháng hiện tại của năm nay, cập nhật end_date thành tháng hiện tại
+        if end_date.year == current_year and end_date.month > current_month:
+            end_date = datetime(current_year, current_month, 1)
+
+        # Thực hiện thống kê doanh thu trong khoảng thời gian cho trước
+        revenue_history = UsingHistory.objects.filter(start_at__range=(start_date, end_date)).annotate(
+            month=TruncMonth('start_at')
+        ).values('month').annotate(revenue=Sum('bicycle__type__price')).order_by('month')
+
+        # Tạo một dict để lưu trữ doanh thu theo tháng
+        revenue_dict = {item['month'].strftime('%Y-%m'): item['revenue'] for item in revenue_history}
+
+        # Tạo dữ liệu response với doanh thu mặc định là 0 cho các tháng không có dữ liệu
+        data = [{'month': month.strftime('%Y-%m'), 'revenue': revenue_dict.get(month.strftime('%Y-%m'), 0)} for month in months]
+
+        return data
+
+
+    def get_months(self, start_date, end_date):
+        months = []
+        while start_date <= end_date:
+            months.append(start_date)
+            # Tăng tháng lên 1, nếu tháng hiện tại là 12 thì chuyển sang năm mới
+            if start_date.month == 12:
+                start_date = start_date.replace(day=1, month=1, year=start_date.year + 1)
+            else:
+                start_date = start_date.replace(day=1, month=start_date.month + 1)
+        return months

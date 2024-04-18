@@ -19,17 +19,23 @@ class UsingHistoryView(APIView):
     def get(self, request, *args, **kwargs):
         limit = request.query_params.get('limit', 10)
         page = request.query_params.get('page', 1)
+        limit = int(limit)
+        page = int(page)
 
-        history = UsingHistory.objects.all().order_by('start_at')
-        paginator = Paginator(history, limit)
+        objects = UsingHistory.objects.all().order_by('start_at')
+        total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
+        current_page_objects = objects[(page - 1) * limit:page * limit]
 
-        try:
-            history_page = paginator.page(page)
-        except PageNotAnInteger:
-            history_page = paginator.page(paginator.num_pages)
-
-        serializer = UsingHistorySerializer(history_page, many=True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        serializer = UsingHistorySerializer(current_page_objects, many=True)
+        return Response({
+            'data': serializer.data,
+            'meta': {
+                'total_pages': total_pages,
+                'current_page': page,
+                'limit': limit,
+                'total': objects.count()
+            }
+        }, status=status.HTTP_200_OK)
 
 class UsingHistoryPkView(APIView):
     permission_classes = [IsAuthenticated]

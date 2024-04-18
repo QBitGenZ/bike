@@ -12,9 +12,25 @@ from user_management.serializers import UserSerializer, AdminUserSerializer, Log
 class AdminUserView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     def get(self, request, *args, **kwargs):
-        users = User.objects.filter(is_staff=True)
-        serializer = AdminUserSerializer(users, many=True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        limit = request.query_params.get('limit', 10)
+        page = request.query_params.get('page', 1)
+        limit = int(limit)
+        page = int(page)
+
+        objects = User.objects.filter(is_staff=True).order_by('username')
+        total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
+        current_page_objects = objects[(page - 1) * limit:page * limit]
+
+        serializer = AdminUserSerializer(current_page_objects, many=True)
+        return Response({
+            'data': serializer.data,
+            'meta': {
+                'total_pages': total_pages,
+                'current_page': page,
+                'limit': limit,
+                'total': objects.count()
+            }
+        }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
@@ -72,9 +88,25 @@ class UserView(APIView):
             serializer = UserSerializer(user, many=False)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
         else:
-            users = User.objects.filter(is_staff=False)
-            serializer = UserSerializer(users, many=True)
-            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+            limit = request.query_params.get('limit', 10)
+            page = request.query_params.get('page', 1)
+            limit = int(limit)
+            page = int(page)
+
+            objects = User.objects.filter(is_staff=False).order_by('username')
+            total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
+            current_page_objects = objects[(page - 1) * limit:page * limit]
+
+            serializer = UserSerializer(current_page_objects, many=True)
+            return Response({
+                'data': serializer.data,
+                'meta': {
+                    'total_pages': total_pages,
+                    'current_page': page,
+                    'limit': limit,
+                    'total': objects.count()
+                }
+            }, status=status.HTTP_200_OK)
     def put(self, request, *args, **kwargs):
         if request.user.is_superuser:
             username = request.query_params.get('username')

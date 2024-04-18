@@ -11,23 +11,25 @@ class EventView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        page = request.query_params.get('page', 1)
         limit = request.query_params.get('limit', 10)
+        page = request.query_params.get('page', 1)
+        limit = int(limit)
+        page = int(page)
 
-        events = Event.objects.all().order_by('name')
-        bicycle_limit = Paginator(events, limit)
+        objects = Event.objects.all().order_by('name')
+        total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
+        current_page_objects = objects[(page - 1) * limit:page * limit]
 
-        try:
-            page_events = bicycle_limit.page(page)
-        except PageNotAnInteger:
-            page_events = bicycle_limit.page(bicycle_limit.num_pages)
-
-        serializer = EventSerializer(page_events, many=True)
-
-        return Response(
-            {'data': serializer.data},
-            status=status.HTTP_200_OK
-        )
+        serializer = EventSerializer(current_page_objects, many=True)
+        return Response({
+            'data': serializer.data,
+            'meta': {
+                'total_pages': total_pages,
+                'current_page': page,
+                'limit': limit,
+                'total': objects.count()
+            }
+        }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_superuser:

@@ -43,7 +43,7 @@ class UserMessagePkView(APIView):
         limit = int(limit)
         page = int(page)
 
-        objects = Message.objects.filter(models.Q(sender=username) | models.Q(recipient=username)).filter(models.Q(sender=request.user.username) | models.Q(recipient=request.user.username)).order_by('-timestamp')
+        objects = Message.objects.filter(models.Q(sender=username) | models.Q(recipient=username)).filter(models.Q(sender=request.user.username) | models.Q(recipient=request.user.username)).order_by('timestamp')
         total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
         current_page_objects = objects[(page - 1) * limit:page * limit]
 

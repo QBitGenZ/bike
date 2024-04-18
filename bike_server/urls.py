@@ -32,6 +32,7 @@ urlpatterns = [
     path(version + '/statistics/', include('system_statistic.urls')),
     path(version + '/reports/', include('report.urls')),
     path(version + '/messengers/', include('messenger.urls')),
+    path(version + '/notifications/', include('notification.urls')),
 ]
 
 if settings.DEBUG:
