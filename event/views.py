@@ -113,7 +113,7 @@ class EventPkView(APIView):
 class EventParticipationView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
+    def get(self, request, event_id):
         limit = request.query_params.get('limit', 10)
         page = request.query_params.get('page', 1)
         limit = int(limit)
@@ -143,8 +143,9 @@ class EventParticipationView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        data = {'event': event_id, 'user': request.user.username}
-        serializer = EventParticipationSerializer(data=data)
+        
+        data = {'event': event.id, 'user': request.user.username}
+        serializer = EventParticipationJoinSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()

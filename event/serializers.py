@@ -10,7 +10,12 @@ class EventParticipationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventParticipation
-        fields = ['user', 'joined_at', 'note']
+        fields = ['id', 'user', 'event', 'joined_at', 'note']
+        
+class EventParticipationJoinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventParticipation
+        fields = ['id', 'user', 'event', 'joined_at', 'note']
 
 class EventSerializer(serializers.ModelSerializer):
     event_images = EventImageSerializer(many=True, read_only=True)
