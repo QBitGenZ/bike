@@ -52,7 +52,8 @@ class PaymentReponse(APIView):
                 vnp_response_code, "Mã lỗi không hợp lệ.")
             
             username = str(order_id).split('-')[0]
-            
+            print(username)
+            print(vnp_amount)
             if(vnp_response_code == '00'):
                 try:
                     user = User.objects.get(username=username)
