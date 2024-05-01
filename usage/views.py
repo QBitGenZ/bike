@@ -103,6 +103,7 @@ class UsingView(APIView):
             try:
                 cost = (data['end_at'] - current_using[0].start_at).total_seconds()/3600 * bicycle.type.price
                 request.user.balance -= cost
+                request.user.save()
             except BicycleType.DoesNotExist:
                 print('Không có loại xe yêu cầu')
             
