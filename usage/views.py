@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from usage.models import UsingHistory
 from usage.serializers import UsingHistorySerializer
-from bicycle.models import Bicycle
+from bicycle.models import Bicycle, BicycleType
 from bicycle.serializers import BicycleSerializer
 from transaction_location.models import Transaction
 
@@ -83,7 +83,7 @@ class UsingView(APIView):
         if not data.get('location'):
             return Response({'error': 'Vui lòng quét mã địa điểm giao dịch'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         
-        current_using = UsingHistory.objects.filter(user=request.user.username ,end_at__isnull=True)
+        current_using = UsingHistory.objects.get(user=request.user.username ,end_at__isnull=True)
         
         if not current_using:
             return Response({'error': 'Bạn chưa mượn xe'}, status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -97,6 +97,16 @@ class UsingView(APIView):
                 transaction_location = Transaction.objects.get(pk=data['location'])
             except Transaction.DoesNotExist:
                 return Response({'error': 'Không có giá trị thỏa mãn'}, status=status.HTTP_404_NOT_FOUND)
+            
+            price = 0.0
+
+            try:
+                type = BicycleType.objects.get(pk=bicycle.type)
+                cost = (data['end_at'] - current_using.start_at).total_seconds()/3600 * type.price
+            except BicycleType.DoesNotExist:
+                print('Không có loại xe yêu cầu')
+            
+            
             bicycle_serializers = BicycleSerializer(instance=bicycle, data={'location': transaction_location.id}, partial=True)
             if bicycle_serializers.is_valid():
                 bicycle_serializers.save()
@@ -105,7 +115,7 @@ class UsingView(APIView):
             
             if serializer.is_valid():
                 serializer.save()
-                return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+                return Response({'data': serializer.data, 'cost': cost}, status=status.HTTP_200_OK)
             else:
                 return Response({'error':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
