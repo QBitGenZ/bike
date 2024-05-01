@@ -83,7 +83,7 @@ class UsingView(APIView):
         if not data.get('location'):
             return Response({'error': 'Vui lòng quét mã địa điểm giao dịch'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         
-        current_using = UsingHistory.objects.get(user=request.user.username ,end_at__isnull=True)
+        current_using = UsingHistory.objects.filter(user=request.user.username ,end_at__isnull=True)
         
         if not current_using:
             return Response({'error': 'Bạn chưa mượn xe'}, status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -102,7 +102,7 @@ class UsingView(APIView):
 
             try:
                 type = BicycleType.objects.get(pk=bicycle.type)
-                cost = (data['end_at'] - current_using.start_at).total_seconds()/3600 * type.price
+                cost = (data['end_at'] - current_using[0].start_at).total_seconds()/3600 * type.price
             except BicycleType.DoesNotExist:
                 print('Không có loại xe yêu cầu')
             
