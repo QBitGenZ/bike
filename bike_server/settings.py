@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     'event.apps.EventConfig',
     'feedback.apps.FeedbackConfig',
     'resource.apps.ResourceConfig',
-    'customer_finance.apps.CustomerFinanceConfig',
     'usage.apps.UsageConfig',
     'transaction_location.apps.TransactionLocationConfig',
     'system_statistic.apps.SystemStatisticConfig',

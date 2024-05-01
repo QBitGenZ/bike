@@ -4,12 +4,13 @@ from rest_framework.response import Response
 
 from vnpay.vnpay import VnpayPayment
 from datetime import datetime
+from user_management.models import User
 
 # Create your views here.
 class CreatePayment(APIView):
   def post(self, request, *args, **kwargs):
       order_type = 'other'
-      order_id = datetime.now()
+      order_id = request.data['user']
       amount = int(request.data['amount'])
       order_desc = 'Nap tien'
       language = 'vn'
@@ -29,6 +30,7 @@ class PaymentReponse(APIView):
             vnp_response_code = input_data.get('vnp_ResponseCode')
             vnp_secure_hash = input_data.get('vnp_SecureHash')
             order_id = input_data.get('vnp_TxnRef')
+            vnp_amount = int(input_data['vnp_Amount']) / 100
 
             response_messages = {
                 "00": "Giao dịch thành công",
@@ -49,7 +51,12 @@ class PaymentReponse(APIView):
             message = response_messages.get(
                 vnp_response_code, "Mã lỗi không hợp lệ.")
             
-            print(message)
+            if(vnp_response_code == '00'):
+                try:
+                    user = User.objects.get(username=order_id)
+                    user.balance += vnp_amount
+                except User.DoesNotExist:
+                    print('Không có user')
 
             response_data = {
                 'code': vnp_response_code,

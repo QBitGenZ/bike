@@ -27,6 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField(upload_to='uploads/%Y/%m/%d/', null=True, blank=True)
     address = models.CharField(max_length=500)
     is_banned = models.BooleanField(default=False)
+    balance = models.FloatField(default=0)
 
     objects = UserManager()
 

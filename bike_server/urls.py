@@ -26,7 +26,6 @@ urlpatterns = [
     path(version + '/events/', include('event.urls')),
     path(version + '/feedbacks/', include('feedback.urls')),
     path(version + '/images/', include('resource.urls')),
-    path(version + '/user-finance/', include('customer_finance.urls')),
     path(version + '/using-history/', include('usage.urls')),
     path(version + '/transactions/', include('transaction_location.urls')),
     path(version + '/statistics/', include('system_statistic.urls')),
