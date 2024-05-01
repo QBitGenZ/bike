@@ -10,7 +10,7 @@ from user_management.models import User
 class CreatePayment(APIView):
   def post(self, request, *args, **kwargs):
       order_type = 'other'
-      order_id = request.data['user']
+      order_id = request.data['user'] + '-' + datetime.now() 
       amount = int(request.data['amount'])
       order_desc = 'Nap tien'
       language = 'vn'
@@ -51,9 +51,11 @@ class PaymentReponse(APIView):
             message = response_messages.get(
                 vnp_response_code, "Mã lỗi không hợp lệ.")
             
+            username = str(order_id).split('-')[0]
+            
             if(vnp_response_code == '00'):
                 try:
-                    user = User.objects.get(username=order_id)
+                    user = User.objects.get(username=username)
                     user.balance += vnp_amount
                 except User.DoesNotExist:
                     print('Không có user')
