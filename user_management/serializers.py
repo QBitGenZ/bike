@@ -31,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
             'id': {'read_only': True},
             'address': {'read_only': True},
+            'balance': {'read_only': True},
         }
 
     def create(self, validated_data):
