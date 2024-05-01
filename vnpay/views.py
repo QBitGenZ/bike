@@ -10,7 +10,7 @@ from user_management.models import User
 class CreatePayment(APIView):
   def post(self, request, *args, **kwargs):
       order_type = 'other'
-      order_id = request.data['user'] + '-' + datetime.now() 
+      order_id = str(request.data['user']) + '-' + str(datetime.now())
       amount = int(request.data['amount'])
       order_desc = 'Nap tien'
       language = 'vn'
