@@ -82,7 +82,7 @@ class BicycleTypePkView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = BicycleTypeSerializer(instance=type, data=data)
+        serializer = BicycleTypeSerializer(instance=type, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -187,7 +187,7 @@ class BicyclePkView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = BicycleSerializer(instance=bicycle, data=data)
+        serializer = BicycleSerializer(instance=bicycle, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(

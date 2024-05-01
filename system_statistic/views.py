@@ -10,7 +10,10 @@ from user_management.models import User
 from event.models import Event
 from bicycle.models import Bicycle, BicycleType
 from datetime import datetime, timedelta
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, fields
+from django.db.models.functions import Extract
+from django.utils.timezone import make_aware
+from decimal import Decimal
 
 
 
@@ -62,8 +65,52 @@ class UsageStatisticsAPIView(APIView):
             else:
                 start_date = start_date.replace(day=1, month=start_date.month + 1)
         return months
-
+    
 class RevenueStatisticsAPIView(APIView):
+    def get(self, request):
+        # Lấy ngày hiện tại
+        current_date = datetime.now()
+
+        # Lấy start_date và end_date từ query parameters
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+
+        # Nếu không có start_date và end_date được truyền vào, mặc định là 12 tháng gần nhất
+        if not start_date_str and not end_date_str:
+            start_date = current_date - timedelta(days=365)
+            end_date = current_date
+        else:
+            # Chuyển đổi start_date và end_date từ string sang datetime
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+                # Kiểm tra nếu start_date lớn hơn end_date, hoán đổi lại
+                if start_date > end_date:
+                    start_date, end_date = end_date, start_date
+            except ValueError:
+                return Response({'message': 'Invalid date format. Please provide dates in YYYY-MM-DD format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Tạo danh sách các tháng cần thống kê
+        months_to_check = [start_date.replace(day=1) + timedelta(days=31*i) for i in range((end_date - start_date).days // 31 + 1)]
+
+        # Thực hiện thống kê doanh thu cho các tháng
+        revenue_history = UsingHistory.objects.filter(start_at__range=(start_date, end_date)).annotate(
+            month=TruncMonth('start_at')
+        ).values('month').annotate(
+            total_revenue=Sum(
+                F('bicycle__type__price') * Extract('hour', F('end_at') - F('start_at'))  # Sửa đổi tính toán doanh thu ở đây
+            )
+        ).order_by('month')
+
+        # Tạo một dict để lưu trữ doanh thu theo tháng
+        revenue_dict = {item['month'].strftime('%Y-%m'): item['total_revenue'] for item in revenue_history}
+
+        # Tạo dữ liệu response với doanh thu mặc định là 0 cho các tháng không có dữ liệu
+        data = [{'month': month.strftime('%Y-%m'), 'revenue': revenue_dict.get(month.strftime('%Y-%m'), 0)} for month in months_to_check]
+
+        return Response({'data': data}, status=status.HTTP_200_OK)
+    
     def get(self, request):
         # Lấy ngày hiện tại
         current_date = datetime.now()
@@ -207,14 +254,29 @@ class RevenueComparisonAPIView(APIView):
     
 class TopUsedBicycleTypesAPIView(APIView):
     def get(self, request):
-        # Thực hiện nhóm dữ liệu theo loại xe và tính tổng số lượt sử dụng và tổng thời gian sử dụng
-        bicycle_usage_stats = UsingHistory.objects.values('bicycle__type').annotate(
-            total_usage=Count('id'),
-            total_time_used=Coalesce(Sum(F('end_at') - F('start_at')), timedelta())
-        ).order_by('-total_usage')[:10]
+        start_date = request.query_params.get('start', None)
+        end_date = request.query_params.get('end', None)
+        
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            bicycle_usage_stats = UsingHistory.objects.filter(
+                start_at__date__gte=start_date, end_at__date__lte=end_date
+            ).values('bicycle__type').annotate(
+                total_usage=Count('id'),
+                total_time_used=Coalesce(Sum(F('end_at') - F('start_at')), timedelta())
+            ).order_by('-total_usage')[:10]
+        else:
+            bicycle_usage_stats = UsingHistory.objects.values('bicycle__type').annotate(
+                total_usage=Count('id'),
+                total_time_used=Coalesce(Sum(F('end_at') - F('start_at')), timedelta())
+            ).order_by('-total_usage')[:10]
 
         top_bicycle_types = []
+        total_used = 0
         for stat in bicycle_usage_stats:
+            total_used += stat['total_usage']
             bicycle_type = BicycleType.objects.get(pk=stat['bicycle__type'])
             total_time_used = stat['total_time_used'].total_seconds() / 3600
             top_bicycle_types.append({
@@ -223,4 +285,43 @@ class TopUsedBicycleTypesAPIView(APIView):
                 'total_time_used': total_time_used
             })
 
-        return Response({'data': top_bicycle_types}, status=status.HTTP_200_OK)
+        return Response({'data': top_bicycle_types, 'total_usage': total_used}, status=status.HTTP_200_OK)
+    
+
+class TopRevenueBicycleTypesAPIView(APIView):
+    def get(self, request):
+        start_date = request.query_params.get('start', None)
+        end_date = request.query_params.get('end', None)
+        
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            bicycle_usage_stats = UsingHistory.objects.filter(
+                start_at__date__gte=start_date, end_at__date__lte=end_date
+            ).values('bicycle__type').annotate(
+                total_usage=Count('id'),
+                total_time_used=Coalesce(Sum(F('end_at') - F('start_at')), timedelta())
+            ).order_by('-total_usage')[:10]
+        else:
+            bicycle_usage_stats = UsingHistory.objects.values('bicycle__type').annotate(
+                total_usage=Count('id'),
+                total_time_used=Coalesce(Sum(F('end_at') - F('start_at')), timedelta())
+            ).order_by('-total_usage')[:10]
+
+        total_revenue = Decimal(0)
+        top_bicycle_types = []
+        for stat in bicycle_usage_stats:
+            bicycle_type = BicycleType.objects.get(pk=stat['bicycle__type'])
+            total_time_used = stat['total_time_used'].total_seconds() / 3600
+            # Lấy giá thuê của loại xe đạp
+            rental_price = bicycle_type.price
+            # Tính doanh thu
+            revenue = Decimal(rental_price) * Decimal(total_time_used)
+            total_revenue += revenue
+            top_bicycle_types.append({
+                'type_name': bicycle_type.name,
+                'revenue': revenue
+            })
+
+        return Response({'data': top_bicycle_types, 'total_revenue': total_revenue}, status=status.HTTP_200_OK)

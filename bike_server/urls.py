@@ -33,6 +33,7 @@ urlpatterns = [
     path(version + '/reports/', include('report.urls')),
     path(version + '/messengers/', include('messenger.urls')),
     path(version + '/notifications/', include('notification.urls')),
+    path(version + '/vnpay/', include('vnpay.urls')),
 ]
 
 if settings.DEBUG:
