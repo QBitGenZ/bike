@@ -101,8 +101,7 @@ class UsingView(APIView):
             price = 0.0
 
             try:
-                type = BicycleType.objects.get(pk=bicycle.type)
-                cost = (data['end_at'] - current_using[0].start_at).total_seconds()/3600 * type.price
+                cost = (data['end_at'] - current_using[0].start_at).total_seconds()/3600 * bicycle.type.price
             except BicycleType.DoesNotExist:
                 print('Không có loại xe yêu cầu')
             
