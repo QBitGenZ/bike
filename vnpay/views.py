@@ -58,6 +58,7 @@ class PaymentReponse(APIView):
                 try:
                     user = User.objects.get(username=username)
                     user.balance += vnp_amount
+                    user.save()
                 except User.DoesNotExist:
                     print('Không có user')
 
