@@ -15,10 +15,18 @@ class TransactionView(APIView):
     def get(self, request, *args, **kwargs):
         limit = request.query_params.get('limit', 10)
         page = request.query_params.get('page', 1)
+        district = request.query_params.get('district', 'all')
+        ward = request.query_params.get('ward', 'all')
         limit = int(limit)
         page = int(page)
 
         objects = Transaction.objects.all().order_by('name')
+        
+        if district != 'all':
+            objects = objects.filter(address__contains=district)
+            if ward != 'all':
+                objects = objects.filter(address__contains=ward)
+        
         total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
         current_page_objects = objects[(page - 1) * limit:page * limit]
 

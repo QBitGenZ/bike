@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.core.paginator import Paginator, PageNotAnInteger
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -13,10 +14,21 @@ class EventView(APIView):
     def get(self, request, *args, **kwargs):
         limit = request.query_params.get('limit', 10)
         page = request.query_params.get('page', 1)
+        event_status = request.query_params.get('status', 'all')
         limit = int(limit)
         page = int(page)
 
         objects = Event.objects.all().order_by('name')
+        
+        now = timezone.now()
+
+        if event_status == 'happening':
+            objects = objects.filter(begin_at__lte=now, end_at__gte=now)
+        elif event_status == 'upcoming':
+            objects = objects.filter(begin_at__gt=now)
+        elif event_status == 'past':
+            objects = objects.filter(end_at__lt=now)
+        
         total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
         current_page_objects = objects[(page - 1) * limit:page * limit]
 

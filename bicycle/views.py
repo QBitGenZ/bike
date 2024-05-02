@@ -15,10 +15,16 @@ class BicycleTypeView(APIView):
     def get(self, request, *args, **kwargs):
         limit = request.query_params.get('limit', 10)
         page = request.query_params.get('page', 1)
+        price_from = request.query_params.get('price_from', 'all')
+        price_to = request.query_params.get('price_to', 'all')
         limit = int(limit)
         page = int(page)
 
         objects = BicycleType.objects.all().order_by('name')
+        
+        if price_from != 'all' and price_to != 'all':
+            objects = objects.filter(price__gte=float(price_from), price__lte=float(price_to))
+        
         total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
         current_page_objects = objects[(page - 1) * limit:page * limit]
 
@@ -120,10 +126,22 @@ class BicycleView(APIView):
     def get(self, request, *args, **kwargs):
         limit = request.query_params.get('limit', 10)
         page = request.query_params.get('page', 1)
+        device_type = request.query_params.get('type', 'all')
+        device_location = request.query_params.get('location', 'all')
+        device_status = request.query_params.get('status', 'all')
         limit = int(limit)
         page = int(page)
 
-        objects = Bicycle.objects.all().order_by('id')
+        objects = Bicycle.objects.all().order_by('status')
+        
+        if device_type != 'all':
+            objects = objects.filter(type__id=device_type)
+        if device_location != 'all':
+            objects = objects.filter(location_id=device_location)
+        if device_status != 'all':
+            objects = objects.filter(status=device_status)
+        
+        
         total_pages = len(objects) // limit + (1 if len(objects) % limit > 0 else 0)
         current_page_objects = objects[(page - 1) * limit:page * limit]
 
