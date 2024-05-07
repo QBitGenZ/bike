@@ -103,8 +103,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'bike',
         'USER': 'bike',
-        'PASSWORD': 'bike',
-        'HOST': 'localhost',
+        'PASSWORD': '12345678',
+        'HOST': 'bike.c1osqi4y687u.ap-southeast-2.rds.amazonaws.com',
         'PORT': '5432'
     }
 }
@@ -199,7 +199,7 @@ CHANNEL_LAYERS = {
 VNP_VERSION = "2.1.0"
 VNP_COMMAND = "pay"
 VNP_CURR_CODE = "VND"
-VNPAY_RETURN_URL = 'http://127.0.0.1:8000/v1/vnpay/payment_response/'  # get from config
+VNPAY_RETURN_URL = 'http://172.20.10.4:8000/v1/vnpay/payment_response/'  # get from config
 VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get from config
 VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
 VNPAY_TMN_CODE = 'LWKHD24I'  # Website ID in VNPAY System, get from config
