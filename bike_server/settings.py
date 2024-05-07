@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
+import environ
 
 from django.conf import settings
 from django.contrib import staticfiles
@@ -19,6 +20,9 @@ from rest_framework import authentication
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env()
 
 
 # Quick-start development settings - unsuitable for production
@@ -101,10 +105,10 @@ WSGI_APPLICATION = 'bike_server.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bike',
-        'USER': 'bike',
-        'PASSWORD': '12345678',
-        'HOST': 'bike.c1osqi4y687u.ap-southeast-2.rds.amazonaws.com',
+        'NAME': env.str('DB_NAME'),
+        'USER': env.str('DB_USER'),
+        'PASSWORD': env.str('DB_PWD'),
+        'HOST': env.str('DB_HOST'),
         'PORT': '5432'
     }
 }
@@ -199,8 +203,8 @@ CHANNEL_LAYERS = {
 VNP_VERSION = "2.1.0"
 VNP_COMMAND = "pay"
 VNP_CURR_CODE = "VND"
-VNPAY_RETURN_URL = 'http://172.20.10.4:8000/v1/vnpay/payment_response/'  # get from config
+VNPAY_RETURN_URL = env.str('VNPAY_RETURN_URL')  # get from config
 VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get from config
 VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
-VNPAY_TMN_CODE = 'LWKHD24I'  # Website ID in VNPAY System, get from config
-VNPAY_HASH_SECRET_KEY = 'IMVSWUVUAJLADFUFZDRJVDJABBPUHSMD'  # Secret key for create checksum,get from config
+VNPAY_TMN_CODE = env.str('VNPAY_TMN_CODE')  # Website ID in VNPAY System, get from config
+VNPAY_HASH_SECRET_KEY = env.str('VNPAY_HASH_SECRET_KEY') # Secret key for create checksum,get from config
